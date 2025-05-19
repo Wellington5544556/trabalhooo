@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         const exists = await Usuario.findOne({ where: { email } });
         if (exists) return res.status(400).json({ message: 'Email já cadastrado' });
@@ -18,17 +18,17 @@ router.post('/register', async (req, res) => {
             email,
             password: hashedPassword
         });
-
-        res.status(201).json({ message: 'Usuário cadastrado com sucesso!', user });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({ message: 'Usuário cadastrado com sucesso!', token, user });
     } catch (err) {
         console.error('Erro ao registrar:', err);
         return res.status(500).json({ message: 'Erro ao registrar' });
     }
-  });
+});
 
-  router.post('/login', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         const user = await Usuario.findOne({ where: { email } });
         if (!user) return res.status(401).json({ message: 'Usuário não encontrado' });
@@ -37,10 +37,10 @@ router.post('/register', async (req, res) => {
         if (!valid) return res.status(401).json({ message: 'Senha incorreta' });
 
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
+        res.status(200).json({ message: 'Login successful', token, user });
     } catch (err) {
         return res.status(500).json({ message: 'Erro ao logar' });
     }
-  });
+});
 
-  module.exports = router;
+module.exports = router;
